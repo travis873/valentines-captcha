@@ -89,7 +89,7 @@ export default function Captcha({ onVerify }) {
             <div className="captcha-lock">🔒</div>
             <h1>Security Check</h1>
             <p className="captcha-subtitle">
-                Select all images of <strong>the most beautiful person in the world</strong> to continue
+                Select all images of <strong>the handsome DEVIL</strong> to continue
             </p>
 
             <div className="captcha-grid">
@@ -109,7 +109,7 @@ export default function Captcha({ onVerify }) {
             {error && <p className="captcha-error">{error}</p>}
 
             <button type="button" className="verify-btn" onClick={verify}>
-                Verify My Love 💕
+                I'm Ready! 💘
             </button>
         </div>
     )
