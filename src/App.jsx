@@ -62,7 +62,7 @@ function App() {
             {step === 'loading' && (
               <div className="glass-card fade-in" style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: '2rem' }}>💕</p>
-                <p>Loading...</p>
+                <p>Eric has something special for you...</p>
               </div>
             )}
             {step === 'coming-soon' && (
