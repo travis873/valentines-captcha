@@ -140,7 +140,9 @@ function App() {
     }
   }
 
-  const musicUrl = config.musicUrl || "https://cdn.pixabay.com/audio/2022/03/24/audio_0172ccc053.mp3"
+  const musicUrl = config.musicUrl || "https://github.com/travis-musau/music-assets/raw/main/romantic_piano.mp3"
+  // Fallback to a known working URL if the above fails (using a different one for testing)
+  // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
 
   return (
     <>
