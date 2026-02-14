@@ -1,7 +1,16 @@
 /* ── Admin Panel ─────────────────────────────── */
 .admin-card {
+    width: 90%;
     max-width: 560px;
+    margin: 0 auto;
     text-align: left;
+}
+
+@media (max-width: 480px) {
+    .admin-card {
+        padding: 1.5rem;
+        width: 94%;
+    }
 }
 
 .admin-card h1 {

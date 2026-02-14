@@ -27,6 +27,8 @@ body {
   max-width: 1200px;
   padding: 1rem;
   box-sizing: border-box;
+  display: flex;
+  justify-content: center;
 }
 
 .glass-card {
@@ -37,11 +39,12 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
   padding: 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 500px;
   margin: 0 auto;
   text-align: center;
   transition: transform 0.3s ease;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -49,7 +52,7 @@ h1 {
   font-size: 3rem;
   margin: 0 0 1rem 0;
   color: var(--primary);
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 p {
@@ -95,8 +98,15 @@ button:disabled {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Floating Hearts Background */
@@ -118,7 +128,17 @@ button:disabled {
 }
 
 @keyframes float {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  50% { opacity: 0.8; }
-  100% { transform: translateY(-100px) scale(1); opacity: 0; }
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
 }
