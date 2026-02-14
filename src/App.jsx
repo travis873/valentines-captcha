@@ -37,27 +37,43 @@ function App() {
 
   // ── Music Player ──────────────────────────────
   const [playing, setPlaying] = useState(false)
+  const [config, setConfig] = useState({})
   const audioRef = useRef(null)
+
+  useEffect(() => {
+    // Fetch config for music settings
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => setConfig(data))
+      .catch(err => console.error("Failed to load config", err))
+  }, [])
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    // Try to autoplay on load (might be blocked)
+    // Set start time if configured
+    const startTime = config.musicStartTime || 0
+
+    const handleLoadedMetadata = () => {
+      if (startTime > 0) audio.currentTime = startTime
+    }
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+
+    // Try to autoplay on load
     const playPromise = audio.play()
     if (playPromise !== undefined) {
       playPromise
         .then(() => setPlaying(true))
-        .catch(() => {
-          // Auto-play was prevented.
-          // We can show a UI element to let the user manually start playback.
-          console.log('Autoplay prevented')
-        })
+        .catch(() => console.log('Autoplay prevented'))
     }
 
-    // Also play on first click anywhere
+    // Play on first click
     const startAudio = () => {
       if (audio.paused) {
+        if (startTime > 0 && audio.currentTime < startTime) {
+          audio.currentTime = startTime
+        }
         audio.play()
           .then(() => setPlaying(true))
           .catch(e => console.error("Audio play failed", e))
@@ -66,11 +82,14 @@ function App() {
     }
     document.addEventListener('click', startAudio)
 
-    return () => document.removeEventListener('click', startAudio)
-  }, [])
+    return () => {
+      document.removeEventListener('click', startAudio)
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+    }
+  }, [config.musicUrl]) // Re-run if music changes
 
   const toggleMusic = (e) => {
-    e.stopPropagation() // Don't trigger the document listener
+    e.stopPropagation()
     const audio = audioRef.current
     if (playing) {
       audio.pause()
@@ -80,13 +99,24 @@ function App() {
     setPlaying(!playing)
   }
 
+  const handleAudioEnd = () => {
+    // Loop back to specific start time (chorus)
+    const audio = audioRef.current
+    if (audio) {
+      audio.currentTime = config.musicStartTime || 0
+      audio.play()
+    }
+  }
+
+  const musicUrl = config.musicUrl || "https://cdn.pixabay.com/audio/2022/03/24/audio_0172ccc053.mp3"
+
   return (
     <>
       {/* Background Music */}
       <audio
         ref={audioRef}
-        src="https://cdn.pixabay.com/audio/2022/03/24/audio_0172ccc053.mp3"
-        loop
+        src={musicUrl}
+        onEnded={handleAudioEnd}
         volume={0.4}
       />
 
