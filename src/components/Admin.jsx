@@ -13,9 +13,12 @@ export default function Admin() {
         bodyText: "Just like you found yourself in those photos, I found my happiness in you. Happy Valentine's Day! 🌹",
         letterText: 'You mean everything to me.',
         signature: '— Forever yours 💌',
+        musicUrl: '',
+        musicStartTime: 0,
     })
     const [configSaved, setConfigSaved] = useState(false)
     const fileInputRef = useRef()
+    const musicInputRef = useRef()
     const [uploadRole, setUploadRole] = useState('target')
 
     const headers = { 'x-admin-password': password }
@@ -59,7 +62,8 @@ export default function Admin() {
             const res = await fetch('/api/config')
             if (res.ok) {
                 const data = await res.json()
-                setConfig(data)
+                // Merge with defaults to ensure new fields exist
+                setConfig(prev => ({ ...prev, ...data }))
             }
         } catch { /* ignore */ }
     }
@@ -85,6 +89,30 @@ export default function Admin() {
         }
         setUploading(false)
         fetchImages()
+    }
+
+    const uploadMusic = async (file) => {
+        setUploading(true)
+        const formData = new FormData()
+        formData.append('file', file)
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'x-admin-password': password,
+                    'x-upload-role': 'audio',
+                },
+                body: formData,
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setConfig(prev => ({ ...prev, musicUrl: data.url }))
+            }
+        } catch (err) {
+            console.error('Music upload failed:', err)
+        }
+        setUploading(false)
     }
 
     const deleteImage = async (url) => {
@@ -241,6 +269,37 @@ export default function Admin() {
                 </div>
             )}
 
+            {/* Music Section */}
+            <div className="config-section">
+                <h2>🎵 Background Music</h2>
+                <div
+                    className="upload-zone"
+                    style={{ padding: '15px' }}
+                    onClick={() => musicInputRef.current.click()}
+                >
+                    {config.musicUrl ? '🎵 Custom Music Uploaded' : '☁️ Upload Custom MP3'}
+                </div>
+                <input
+                    ref={musicInputRef}
+                    type="file"
+                    accept="audio/*"
+                    hidden
+                    onChange={(e) => {
+                        if (e.target.files[0]) uploadMusic(e.target.files[0])
+                        e.target.value = ''
+                    }}
+                />
+
+                <label className="config-label" style={{ marginTop: '10px' }}>Start time (seconds) - Skip the intro!</label>
+                <input
+                    className="admin-input"
+                    type="number"
+                    placeholder="0"
+                    value={config.musicStartTime}
+                    onChange={(e) => setConfig({ ...config, musicStartTime: Number(e.target.value) })}
+                />
+            </div>
+
             {/* Success Message Editor */}
             <div className="config-section">
                 <h2>✏️ Success Message</h2>
@@ -275,7 +334,7 @@ export default function Admin() {
                     onChange={(e) => setConfig({ ...config, signature: e.target.value })}
                 />
                 <button className="admin-btn" onClick={saveConfig}>
-                    {configSaved ? '✅ Saved!' : 'Save Message 💾'}
+                    {configSaved ? '✅ Saved!' : 'Save Config 💾'}
                 </button>
             </div>
 
