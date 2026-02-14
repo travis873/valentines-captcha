@@ -89,7 +89,7 @@ export default function Captcha({ onVerify }) {
             <div className="captcha-lock">🔒</div>
             <h1>Security Check</h1>
             <p className="captcha-subtitle">
-                Select all images of <strong>the handsome DEVIL</strong> to continue
+                Select all images of <strong>the HANDSOME ANGEL</strong> to continue
             </p>
 
             <div className="captcha-grid">
