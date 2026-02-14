@@ -12,6 +12,7 @@
   "dependencies": {
     "@vercel/blob": "^2.2.0",
     "canvas-confetti": "^1.9.4",
+    "formidable": "^3.5.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
