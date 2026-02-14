@@ -1,4 +1,4 @@
-import { put, list } from '@vercel/blob';
+import { put } from '@vercel/blob';
 
 export const config = { api: { bodyParser: false } };
 
@@ -13,8 +13,10 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Role comes from a header (much more reliable than parsing multipart)
+    const role = req.headers['x-upload-role'] === 'target' ? 'target' : 'distractor';
+
     try {
-        // Parse multipart manually using raw body
         const chunks = [];
         for await (const chunk of req) {
             chunks.push(chunk);
@@ -30,15 +32,12 @@ export default async function handler(req, res) {
 
         const boundary = boundaryMatch[1];
         const parts = parseMultipart(body, boundary);
-
         const filePart = parts.find(p => p.filename);
-        const rolePart = parts.find(p => p.name === 'role');
 
         if (!filePart) {
             return res.status(400).json({ error: 'No file provided' });
         }
 
-        const role = rolePart ? rolePart.data.toString().trim() : 'distractor';
         const filename = `${role}/${Date.now()}-${filePart.filename}`;
 
         const blob = await put(filename, filePart.data, {
@@ -53,14 +52,13 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         console.error('Upload error:', err);
-        return res.status(500).json({ error: 'Upload failed' });
+        return res.status(500).json({ error: 'Upload failed: ' + err.message });
     }
 }
 
 function parseMultipart(body, boundary) {
     const parts = [];
-    const boundaryBuf = Buffer.from(`--${boundary}`);
-    const endBuf = Buffer.from(`--${boundary}--`);
+    const boundaryBuf = Buffer.from('--' + boundary);
 
     let start = body.indexOf(boundaryBuf) + boundaryBuf.length;
 
@@ -74,21 +72,20 @@ function parseMultipart(body, boundary) {
 
         const headers = partData.slice(0, headerEnd).toString();
         let data = partData.slice(headerEnd + 4);
-        // Remove trailing \r\n
         if (data.length >= 2 && data[data.length - 2] === 0x0d && data[data.length - 1] === 0x0a) {
             data = data.slice(0, -2);
         }
 
-        const nameMatch = headers.match(/name="([^"]+)"/);
         const filenameMatch = headers.match(/filename="([^"]+)"/);
         const ctMatch = headers.match(/Content-Type:\s*(.+)/i);
 
-        parts.push({
-            name: nameMatch ? nameMatch[1] : null,
-            filename: filenameMatch ? filenameMatch[1] : null,
-            contentType: ctMatch ? ctMatch[1].trim() : 'application/octet-stream',
-            data,
-        });
+        if (filenameMatch) {
+            parts.push({
+                filename: filenameMatch[1],
+                contentType: ctMatch ? ctMatch[1].trim() : 'application/octet-stream',
+                data,
+            });
+        }
 
         start = nextBoundary + boundaryBuf.length;
     }

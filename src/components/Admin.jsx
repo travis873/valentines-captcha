@@ -23,25 +23,21 @@ export default function Admin() {
     const login = async () => {
         setAuthError('')
         try {
-            const res = await fetch('/api/images', { headers })
-            if (res.ok) {
+            // Test password against a protected endpoint
+            const res = await fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'x-admin-password': password,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ _ping: true }),
+            })
+            if (res.status === 401) {
+                setAuthError('Wrong password! 🔒')
+            } else {
                 setAuthed(true)
                 fetchImages()
                 fetchConfig()
-            } else {
-                // Test with a protected endpoint
-                const res2 = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { ...headers, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config),
-                })
-                if (res2.status === 401) {
-                    setAuthError('Wrong password! 🔒')
-                } else {
-                    setAuthed(true)
-                    fetchImages()
-                    fetchConfig()
-                }
             }
         } catch {
             setAuthError('Could not connect to server')
@@ -73,12 +69,14 @@ export default function Admin() {
         for (const file of files) {
             const formData = new FormData()
             formData.append('file', file)
-            formData.append('role', uploadRole)
 
             try {
                 await fetch('/api/upload', {
                     method: 'POST',
-                    headers: { 'x-admin-password': password },
+                    headers: {
+                        'x-admin-password': password,
+                        'x-upload-role': uploadRole,
+                    },
                     body: formData,
                 })
             } catch (err) {
