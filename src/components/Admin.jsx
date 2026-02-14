@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { upload } from '@vercel/blob/client'
 import './Admin.css'
 
 export default function Admin() {
@@ -108,15 +107,20 @@ export default function Admin() {
                 // Resize for performance!
                 const optimizedFile = await resizeImage(file)
 
-                await upload(optimizedFile.name, optimizedFile, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
-                    clientPayload: JSON.stringify({ password, role: uploadRole }),
-                })
+                const formData = new FormData()
+                formData.append('file', optimizedFile)
 
+                await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'x-admin-password': password,
+                        'x-upload-role': uploadRole,
+                    },
+                    body: formData,
+                })
             } catch (err) {
                 console.error('Upload failed:', err)
-                alert(`Failed to upload ${file.name}: ${err.message}`)
+                alert(`Failed to upload ${file.name}`)
             }
         }
         setUploading(false)
@@ -125,22 +129,33 @@ export default function Admin() {
 
     const uploadMusic = async (file) => {
         // Vercel Serverless Function Limit is 4.5MB
-        if (file.size > 490 * 1024 * 1024) { // 490MB limit now!
-            alert("⚠️ File too large! Keep it under 500MB.")
+        if (file.size > 4.5 * 1024 * 1024) {
+            alert("⚠️ File too large!\nVercel free tier limits uploads to 4.5MB.\n\nPlease compress your MP3 (e.g. use mp3smaller.com) or clip it.")
             return
         }
 
         setUploading(true)
+        const formData = new FormData()
+        formData.append('file', file)
 
         try {
-            const blob = await upload(file.name, file, {
-                access: 'public',
-                handleUploadUrl: '/api/upload',
-                clientPayload: JSON.stringify({ password, role: 'audio' }),
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'x-admin-password': password,
+                    'x-upload-role': 'audio',
+                },
+                body: formData,
             })
-
-            setConfig(prev => ({ ...prev, musicUrl: blob.url }))
-            alert("Music uploaded successfully! 🎵")
+            if (res.ok) {
+                const data = await res.json()
+                setConfig(prev => ({ ...prev, musicUrl: data.url }))
+                alert("Music uploaded successfully! 🎵")
+            } else {
+                const err = await res.json()
+                console.error("Upload error details:", err)
+                alert(`Upload failed (Status: ${res.status}): ${err.error || 'Unknown error'}`)
+            }
         } catch (err) {
             console.error('Music upload failed:', err)
             alert(`Network/System Error: ${err.message}`)
