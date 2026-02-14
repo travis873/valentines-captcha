@@ -153,11 +153,12 @@ export default function Admin() {
                 alert("Music uploaded successfully! 🎵")
             } else {
                 const err = await res.json()
-                alert(`Upload failed: ${err.error || 'Unknown error'}`)
+                console.error("Upload error details:", err)
+                alert(`Upload failed (Status: ${res.status}): ${err.error || 'Unknown error'}`)
             }
         } catch (err) {
             console.error('Music upload failed:', err)
-            alert("Upload failed. Check console for details.")
+            alert(`Network/System Error: ${err.message}`)
         }
         setUploading(false)
     }
