@@ -68,13 +68,48 @@ export default function Admin() {
         } catch { /* ignore */ }
     }
 
+    // ── Optimization: Resize images before upload ──
+    const resizeImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
+            reader.onload = (e) => {
+                const img = new Image()
+                img.src = e.target.result
+                img.onload = () => {
+                    const canvas = document.createElement('canvas')
+                    const ctx = canvas.getContext('2d')
+                    const MAX_WIDTH = 800 // Resize to 800px width (good balance)
+                    const scale = MAX_WIDTH / img.width
+
+                    if (scale < 1) {
+                        canvas.width = MAX_WIDTH
+                        canvas.height = img.height * scale
+                    } else {
+                        canvas.width = img.width
+                        canvas.height = img.height
+                    }
+
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+                    canvas.toBlob((blob) => {
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+                    }, 'image/jpeg', 0.8) // 80% quality JPEG
+                }
+            }
+        })
+    }
+
     const uploadFiles = async (files) => {
         setUploading(true)
         for (const file of files) {
-            const formData = new FormData()
-            formData.append('file', file)
-
             try {
+                // Resize for performance!
+                const optimizedFile = await resizeImage(file)
+
+                const formData = new FormData()
+                formData.append('file', optimizedFile)
+
                 await fetch('/api/upload', {
                     method: 'POST',
                     headers: {
@@ -85,6 +120,7 @@ export default function Admin() {
                 })
             } catch (err) {
                 console.error('Upload failed:', err)
+                alert(`Failed to upload ${file.name}`)
             }
         }
         setUploading(false)
@@ -92,6 +128,12 @@ export default function Admin() {
     }
 
     const uploadMusic = async (file) => {
+        // Vercel Serverless Function Limit is 4.5MB
+        if (file.size > 4.5 * 1024 * 1024) {
+            alert("⚠️ File too large!\nVercel free tier limits uploads to 4.5MB.\n\nPlease compress your MP3 (e.g. use mp3smaller.com) or clip it.")
+            return
+        }
+
         setUploading(true)
         const formData = new FormData()
         formData.append('file', file)
@@ -108,9 +150,14 @@ export default function Admin() {
             if (res.ok) {
                 const data = await res.json()
                 setConfig(prev => ({ ...prev, musicUrl: data.url }))
+                alert("Music uploaded successfully! 🎵")
+            } else {
+                const err = await res.json()
+                alert(`Upload failed: ${err.error || 'Unknown error'}`)
             }
         } catch (err) {
             console.error('Music upload failed:', err)
+            alert("Upload failed. Check console for details.")
         }
         setUploading(false)
     }
