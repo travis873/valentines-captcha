@@ -149,8 +149,23 @@ export default function Admin() {
             })
             if (res.ok) {
                 const data = await res.json()
-                setConfig(prev => ({ ...prev, musicUrl: data.url }))
-                alert("Music uploaded successfully! 🎵")
+                const newUrl = data.url
+
+                // 1. Update local state
+                const newConfig = { ...config, musicUrl: newUrl }
+                setConfig(newConfig)
+
+                // 2. Persist to backend immediately!
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'x-admin-password': password,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newConfig),
+                })
+
+                alert("Music uploaded AND saved! 🎵\n\nYou can now test it below.")
             } else {
                 const err = await res.json()
                 console.error("Upload error details:", err)
@@ -346,6 +361,13 @@ export default function Admin() {
                     value={config.musicStartTime}
                     onChange={(e) => setConfig({ ...config, musicStartTime: Number(e.target.value) })}
                 />
+
+                {config.musicUrl && (
+                    <div style={{ marginTop: '15px' }}>
+                        <p style={{ fontSize: '0.8rem', marginBottom: '5px' }}>🎧 Test Player:</p>
+                        <audio controls src={config.musicUrl} style={{ width: '100%' }} />
+                    </div>
+                )}
             </div>
 
             {/* Success Message Editor */}
