@@ -1,0 +1,54 @@
+/* ── Success screen ──────────────────────────── */
+.success-card {
+    max-width: 480px;
+}
+
+.success-emoji {
+    font-size: 3.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.success-hero {
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.success-body {
+    font-size: 1.05rem;
+    line-height: 1.65;
+}
+
+/* love letter box */
+.love-letter {
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px dashed var(--secondary);
+    border-radius: 16px;
+    padding: 1.4rem 1.2rem;
+    margin: 1.6rem 0;
+    font-style: italic;
+}
+
+.love-letter p {
+    margin: 0 0 0.6rem;
+}
+
+.signature {
+    text-align: right;
+    font-weight: 600;
+    margin-bottom: 0 !important;
+}
+
+/* couple photo placeholder */
+.couple-photo-slot {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #fff0f3 0%, #fce4ec 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
