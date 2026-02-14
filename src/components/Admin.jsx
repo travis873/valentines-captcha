@@ -322,9 +322,9 @@ export default function Admin() {
                 <div
                     className="upload-zone"
                     style={{ padding: '15px' }}
-                    onClick={() => musicInputRef.current.click()}
+                    onClick={() => !uploading && musicInputRef.current.click()}
                 >
-                    {config.musicUrl ? '🎵 Custom Music Uploaded' : '☁️ Upload Custom MP3'}
+                    {uploading ? '⏳ Uploading Music…' : (config.musicUrl ? '🎵 Custom Music Uploaded (Click to change)' : '☁️ Upload Custom MP3')}
                 </div>
                 <input
                     ref={musicInputRef}
