@@ -49,9 +49,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
+    // Only run if we actually HAVE a music URL and the ref exists
+    if (!config.musicUrl || !audioRef.current) return
 
+    const audio = audioRef.current
     console.log("Audio initializing. URL:", config.musicUrl)
 
     // Force reload if URL changes
@@ -91,7 +92,7 @@ function App() {
 
     // Play on first click anywhere (fallback for autoplay policy)
     const handleUserInteraction = () => {
-      console.log("User interaction detected. Attempting to play...")
+      console.log("User interaction detected.")
       if (audio.paused) {
         attemptPlay()
       }
@@ -109,16 +110,13 @@ function App() {
       document.removeEventListener('click', handleUserInteraction)
       document.removeEventListener('touchstart', handleUserInteraction)
       document.removeEventListener('keydown', handleUserInteraction)
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-    }
-  }, [config.musicUrl]) // Re-run if music changes
 
-  // Re-sync start time logic when config updates (even if URL same)
-  useEffect(() => {
-    if (audioRef.current && config.musicStartTime !== undefined) {
-      console.log("Start time config updated:", config.musicStartTime)
+      // Cleanup audio listeners
+      if (audio) {
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      }
     }
-  }, [config.musicStartTime])
+  }, [config.musicUrl]) // Re-run only if music changes (and exists)
 
   const toggleMusic = (e) => {
     e.stopPropagation()
@@ -140,27 +138,29 @@ function App() {
     }
   }
 
-  const musicUrl = config.musicUrl || "https://github.com/travis-musau/music-assets/raw/main/romantic_piano.mp3"
-  // Fallback to a known working URL if the above fails (using a different one for testing)
-  // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  const musicUrl = config.musicUrl
 
   return (
     <>
-      {/* Background Music */}
-      <audio
-        ref={audioRef}
-        src={musicUrl}
-        onEnded={handleAudioEnd}
-        volume={0.4}
-      />
+      {/* Background Music - Only render if a URL exists */}
+      {musicUrl && (
+        <>
+          <audio
+            ref={audioRef}
+            src={musicUrl}
+            onEnded={handleAudioEnd}
+            volume={0.4}
+          />
 
-      <button
-        className="music-toggle"
-        onClick={toggleMusic}
-        title={playing ? "Pause Music" : "Play Music"}
-      >
-        {playing ? '🔊' : '🔈'}
-      </button>
+          <button
+            className="music-toggle"
+            onClick={toggleMusic}
+            title={playing ? "Pause Music" : "Play Music"}
+          >
+            {playing ? '🔊' : '🔈'}
+          </button>
+        </>
+      )}
 
       <div className="bg-hearts">
         {hearts.map((h) => (
