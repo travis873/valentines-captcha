@@ -52,41 +52,73 @@ function App() {
     const audio = audioRef.current
     if (!audio) return
 
+    console.log("Audio initializing. URL:", config.musicUrl)
+
+    // Force reload if URL changes
+    audio.load()
+
     // Set start time if configured
     const startTime = config.musicStartTime || 0
 
     const handleLoadedMetadata = () => {
-      if (startTime > 0) audio.currentTime = startTime
-    }
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-
-    // Try to autoplay on load
-    const playPromise = audio.play()
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => setPlaying(true))
-        .catch(() => console.log('Autoplay prevented'))
-    }
-
-    // Play on first click
-    const startAudio = () => {
-      if (audio.paused) {
-        if (startTime > 0 && audio.currentTime < startTime) {
+      console.log("Audio metadata loaded.", { duration: audio.duration, startTime })
+      if (startTime > 0) {
+        if (audio.duration && startTime >= audio.duration) {
+          console.warn("Start time exceeds duration. Resetting to 0.")
+          audio.currentTime = 0
+        } else {
           audio.currentTime = startTime
         }
-        audio.play()
-          .then(() => setPlaying(true))
-          .catch(e => console.error("Audio play failed", e))
       }
-      document.removeEventListener('click', startAudio)
+      // Try to play immediately after loading metadata
+      attemptPlay()
     }
-    document.addEventListener('click', startAudio)
+
+    const attemptPlay = () => {
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true)
+            console.log("Audio playing successfully")
+          })
+          .catch((err) => console.log('Autoplay prevented/failed:', err))
+      }
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('error', (e) => console.error("Audio Error Event:", e))
+
+    // Play on first click anywhere (fallback for autoplay policy)
+    const handleUserInteraction = () => {
+      console.log("User interaction detected. Attempting to play...")
+      if (audio.paused) {
+        attemptPlay()
+      }
+      // Remove listeners once we've tried to play
+      document.removeEventListener('click', handleUserInteraction)
+      document.removeEventListener('touchstart', handleUserInteraction)
+      document.removeEventListener('keydown', handleUserInteraction)
+    }
+
+    document.addEventListener('click', handleUserInteraction)
+    document.addEventListener('touchstart', handleUserInteraction)
+    document.addEventListener('keydown', handleUserInteraction)
 
     return () => {
-      document.removeEventListener('click', startAudio)
+      document.removeEventListener('click', handleUserInteraction)
+      document.removeEventListener('touchstart', handleUserInteraction)
+      document.removeEventListener('keydown', handleUserInteraction)
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
     }
   }, [config.musicUrl]) // Re-run if music changes
+
+  // Re-sync start time logic when config updates (even if URL same)
+  useEffect(() => {
+    if (audioRef.current && config.musicStartTime !== undefined) {
+      console.log("Start time config updated:", config.musicStartTime)
+    }
+  }, [config.musicStartTime])
 
   const toggleMusic = (e) => {
     e.stopPropagation()
@@ -100,11 +132,11 @@ function App() {
   }
 
   const handleAudioEnd = () => {
-    // Loop back to specific start time (chorus)
+    console.log("Audio ended. Looping...")
     const audio = audioRef.current
     if (audio) {
       audio.currentTime = config.musicStartTime || 0
-      audio.play()
+      audio.play().catch(e => console.error("Loop restart failed:", e))
     }
   }
 
