@@ -29,6 +29,11 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
+        // Handle ping/validation check without parsing/saving
+        if (req.body && req.body._ping) {
+            return res.status(200).json({ success: true });
+        }
+
         try {
             const configData = JSON.stringify(req.body);
             await put('config.json', configData, {
