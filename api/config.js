@@ -1,21 +1,28 @@
 import { put, list } from '@vercel/blob';
 
 export default async function handler(req, res) {
+    // Force no-cache on the response
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     if (req.method === 'GET') {
         try {
             console.log('GET /api/config: Fetching blobs...');
+            // list() can sometimes be cached, so we filter carefully
             const { blobs } = await list();
-            // Find the most recent config.json
             const configBlob = blobs
                 .filter(b => b.pathname === 'config.json')
                 .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
 
             if (configBlob) {
                 console.log('Found config blob:', configBlob.url);
-                // Use cache: 'no-store' to bypass any edge caching
-                const response = await fetch(configBlob.url, { cache: 'no-store' });
+                // Fetch with a timestamp to bust any edge caching on the blob itself
+                const response = await fetch(`${configBlob.url}?t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+                });
                 const data = await response.json();
-                console.log('Loaded config data:', data);
                 return res.status(200).json(data);
             }
 

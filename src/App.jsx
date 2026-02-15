@@ -15,7 +15,7 @@ function App() {
         id: i,
         left: Math.random() * 100,
         delay: Math.random() * 5,
-        duration: 6 + Math.random() * 4,
+        duration: 8 + Math.random() * 4,
         size: 10 + Math.random() * 20,
       }))
     )
@@ -35,7 +35,7 @@ function App() {
     }
   }, [isAdmin])
 
-  // ── Music Player ──────────────────────────────
+  // ── Music Player State ────────────────────────
   const [playing, setPlaying] = useState(false)
   const [config, setConfig] = useState({
     title: 'You Got It!',
@@ -50,44 +50,38 @@ function App() {
   const audioRef = useRef(null)
   const [hasInteracted, setHasInteracted] = useState(false)
 
+  // Fetch Config
   useEffect(() => {
-    // Fetch config with cache-busting timestamp
     fetch(`/api/config?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
-        console.log("Fetched config (cache-busted):", data);
+        console.log("Config loaded:", data);
         setConfig(prev => ({ ...prev, ...data }));
       })
-      .catch(err => console.error("Failed to load config", err))
+      .catch(err => console.error("Config fetch failed", err))
   }, [])
 
+  // Handle Autoplay & Interaction
   useEffect(() => {
-    const handleInteraction = () => {
-      if (hasInteracted) return;
-      console.log("User interacted. Attempting to play audio...");
+    const unlock = () => {
       setHasInteracted(true);
-
-      if (audioRef.current && config.musicUrl) {
+      if (audioRef.current && config.musicUrl && !playing) {
         audioRef.current.play()
-          .then(() => {
-            setPlaying(true);
-            console.log("Music started successfully");
-          })
-          .catch(err => console.log("Autoplay blocked/failed:", err));
+          .then(() => setPlaying(true))
+          .catch(e => console.log("Unlock play failed:", e));
       }
-
-      document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
     };
 
-    document.addEventListener('click', handleInteraction);
-    document.addEventListener('touchstart', handleInteraction);
+    document.addEventListener('click', unlock);
+    document.addEventListener('touchstart', unlock);
 
     return () => {
-      document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
     };
-  }, [config.musicUrl, hasInteracted]);
+  }, [config.musicUrl, hasInteracted, playing]);
 
   const toggleMusic = (e) => {
     e.stopPropagation()
@@ -103,7 +97,6 @@ function App() {
   }
 
   const handleAudioEnd = () => {
-    console.log("Looping track...")
     if (audioRef.current) {
       audioRef.current.currentTime = 0
       audioRef.current.play().catch(e => console.error("Loop failed:", e))
@@ -112,7 +105,6 @@ function App() {
 
   return (
     <>
-      {/* Background Music - Singleton audio tag */}
       <audio
         ref={audioRef}
         src={config.musicUrl}
