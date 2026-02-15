@@ -43,128 +43,91 @@ function App() {
     bodyText: "Just like you found yourself in those photos, I found my happiness in you. Happy Valentine's Day! 🌹",
     letterText: 'You mean everything to me.',
     signature: '— Forever yours 💌',
-    musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
-    musicStartTime: 0,
+    musicUrl: '',
     targetName: 'the HANDSOME ANGEL',
     senderName: 'Eric',
   })
   const audioRef = useRef(null)
+  const [hasInteracted, setHasInteracted] = useState(false)
 
   useEffect(() => {
-    // Fetch config for music settings
-    fetch('/api/config')
+    // Fetch config with cache-busting timestamp
+    fetch(`/api/config?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
-        console.log("Fetched config:", data);
+        console.log("Fetched config (cache-busted):", data);
         setConfig(prev => ({ ...prev, ...data }));
       })
       .catch(err => console.error("Failed to load config", err))
   }, [])
 
-  const [hasInteracted, setHasInteracted] = useState(false);
-
   useEffect(() => {
     const handleInteraction = () => {
-      console.log("User interacted with page.");
+      if (hasInteracted) return;
+      console.log("User interacted. Attempting to play audio...");
       setHasInteracted(true);
+
+      if (audioRef.current && config.musicUrl) {
+        audioRef.current.play()
+          .then(() => {
+            setPlaying(true);
+            console.log("Music started successfully");
+          })
+          .catch(err => console.log("Autoplay blocked/failed:", err));
+      }
+
       document.removeEventListener('click', handleInteraction);
       document.removeEventListener('touchstart', handleInteraction);
     };
+
     document.addEventListener('click', handleInteraction);
     document.addEventListener('touchstart', handleInteraction);
+
     return () => {
       document.removeEventListener('click', handleInteraction);
       document.removeEventListener('touchstart', handleInteraction);
     };
-  }, []);
-
-  useEffect(() => {
-    // Only run if we actually HAVE a music URL and the ref exists
-    if (!config.musicUrl || !audioRef.current) return
-
-    const audio = audioRef.current
-
-    // Set start time if configured
-    const startTime = config.musicStartTime || 0
-
-    const attemptPlay = () => {
-      const playPromise = audio.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setPlaying(true)
-            console.log("Audio playing successfully")
-          })
-          .catch((err) => console.log('Autoplay prevented/failed:', err))
-      }
-    }
-
-    const handleLoadedMetadata = () => {
-      console.log("Audio metadata loaded.", { duration: audio.duration, startTime })
-      if (startTime > 0 && audio.duration && startTime < audio.duration) {
-        audio.currentTime = startTime
-      }
-      attemptPlay()
-    }
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-
-    // If already loaded or interaction happened, try playing
-    if (audio.readyState >= 1) {
-      handleLoadedMetadata();
-    }
-
-    if (hasInteracted) {
-      attemptPlay();
-    }
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-    }
-  }, [config.musicUrl, hasInteracted])
+  }, [config.musicUrl, hasInteracted]);
 
   const toggleMusic = (e) => {
     e.stopPropagation()
     const audio = audioRef.current
+    if (!audio) return
+
     if (playing) {
       audio.pause()
-    } else {
-      audio.play()
+      setPlaying(false)
+    } else if (config.musicUrl) {
+      audio.play().then(() => setPlaying(true)).catch(e => console.error("Play failed:", e))
     }
-    setPlaying(!playing)
   }
 
   const handleAudioEnd = () => {
-    console.log("Audio ended. Looping...")
-    const audio = audioRef.current
-    if (audio) {
-      audio.currentTime = config.musicStartTime || 0
-      audio.play().catch(e => console.error("Loop restart failed:", e))
+    console.log("Looping track...")
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(e => console.error("Loop failed:", e))
     }
   }
 
-
-
   return (
     <>
-      {/* Background Music - Only render if a URL exists */}
-      {musicUrl && (
-        <>
-          <audio
-            ref={audioRef}
-            src={musicUrl}
-            onEnded={handleAudioEnd}
-            volume={0.4}
-          />
+      {/* Background Music - Singleton audio tag */}
+      <audio
+        ref={audioRef}
+        src={config.musicUrl}
+        onEnded={handleAudioEnd}
+        preload="auto"
+      />
 
-          <button
-            className={`music-toggle ${playing ? 'playing' : ''}`}
-            onClick={toggleMusic}
-            title={playing ? "Pause Music" : "Play Music"}
-          >
-            {playing ? '🔊' : '🔈'}
-          </button>
-        </>
+      {config.musicUrl && (
+        <button
+          className={`music-toggle ${playing ? 'playing' : ''}`}
+          onClick={toggleMusic}
+          title={playing ? "Pause Music" : "Play Music"}
+        >
+          {playing ? '🔊' : '🔈'}
+        </button>
       )}
 
       <div className="bg-hearts">

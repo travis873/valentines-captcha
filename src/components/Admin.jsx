@@ -13,10 +13,10 @@ export default function Admin() {
         bodyText: "Just like you found yourself in those photos, I found my happiness in you. Happy Valentine's Day! 🌹",
         letterText: 'You mean everything to me.',
         signature: '— Forever yours 💌',
-        musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
-        musicStartTime: 0,
+        musicUrl: '',
         targetName: 'the HANDSOME ANGEL',
         senderName: 'Eric',
+        lastSaved: null,
     })
     const [configSaved, setConfigSaved] = useState(false)
     const fileInputRef = useRef()
@@ -153,7 +153,7 @@ export default function Admin() {
                     ...headers,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(config),
+                body: JSON.stringify({ ...config, lastSaved: new Date().toISOString() }),
             })
             setConfigSaved(true)
             setTimeout(() => setConfigSaved(false), 2000)
@@ -288,42 +288,18 @@ export default function Admin() {
             {/* Music Section */}
             <div className="config-section">
                 <h2>🎵 Background Music</h2>
-
                 <div style={{ marginBottom: '15px' }}>
                     <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px' }}>
-                        Select default track or paste a custom link.
+                        Paste your Vercel Blob or any external audio link below.
                     </p>
-
-                    <label className="config-label">Music Preset</label>
-                    <select
-                        className="admin-input"
-                        value={config.musicUrl === 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3' ? config.musicUrl : ''}
-                        onChange={(e) => e.target.value && setConfig({ ...config, musicUrl: e.target.value })}
-                        style={{ marginBottom: '10px' }}
-                    >
-                        <option value="https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3">
-                            Mbosso - Pawa (Default)
-                        </option>
-                        <option value="">Custom Link (Enter below)</option>
-                    </select>
-
-                    <label className="config-label">Custom Link</label>
+                    <label className="config-label">Audio URL</label>
                     <input
                         className="admin-input"
-                        placeholder="https://example.com/song.mp3"
+                        placeholder="https://.../your-track.mp3"
                         value={config.musicUrl}
                         onChange={(e) => setConfig({ ...config, musicUrl: e.target.value })}
                     />
                 </div>
-
-                <label className="config-label">Start time (seconds)</label>
-                <input
-                    className="admin-input"
-                    type="number"
-                    placeholder="0"
-                    value={config.musicStartTime}
-                    onChange={(e) => setConfig({ ...config, musicStartTime: Number(e.target.value) })}
-                />
             </div>
 
             {/* Customization Section */}
@@ -384,11 +360,20 @@ export default function Admin() {
             </div>
 
             {/* Preview link */}
-            <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(255,255,255,0.1)', borderRadius: '15px' }}>
-                <a href="/" target="_blank" rel="noopener noreferrer" className="preview-link" style={{ fontSize: '1.1rem', fontWeight: 'bold', textDecoration: 'none', color: 'var(--primary)' }}>
-                    👀 Open Public Captcha →
-                </a>
-                <p style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '10px' }}>Testing tip: Open in a new tab to see your changes.</p>
+            <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(255,255,255,0.1)', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <a href="/" target="_blank" rel="noopener noreferrer" className="preview-link" style={{ fontSize: '1.1rem', fontWeight: 'bold', textDecoration: 'none', color: 'var(--primary)', display: 'block' }}>
+                        👀 Open Public Captcha →
+                    </a>
+                    {config.lastSaved && (
+                        <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>
+                            Synced: {new Date(config.lastSaved).toLocaleTimeString()}
+                        </span>
+                    )}
+                </div>
+                <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '10px', color: '#666' }}>
+                    <strong>Note:</strong> Browsers are very strict with music. Changes will reflect as soon as you refresh the public page.
+                </p>
             </div>
         </div>
     )
