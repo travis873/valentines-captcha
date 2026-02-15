@@ -204,6 +204,28 @@ export default function Admin() {
                 </div>
             </div>
 
+            {/* Diagnostics */}
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <button
+                    onClick={async () => {
+                        try {
+                            const res = await fetch('/api/config', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+                                body: JSON.stringify({ _ping: true })
+                            })
+                            if (res.ok) alert("API Connection: OK ✅")
+                            else alert(`API Error: ${res.status} ${res.statusText}`)
+                        } catch (e) {
+                            alert(`Network Error: ${e.message}`)
+                        }
+                    }}
+                    style={{ background: 'rgba(255,255,255,0.2)', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
+                >
+                    📡 Test API Connection
+                </button>
+            </div>
+
             {/* Upload Section */}
             <div className="upload-section">
                 <h2>Upload Photos</h2>
@@ -286,12 +308,33 @@ export default function Admin() {
                 <h2>🎵 Background Music</h2>
 
                 <div style={{ marginBottom: '15px' }}>
-                    <p style={{ fontSize: '0.9rem', color: '#666' }}>
-                        Default Track: <strong>Mbosso - Pawa</strong>
+                    <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px' }}>
+                        Select default track or paste a custom link.
                     </p>
+
+                    <label className="config-label">Music Preset</label>
+                    <select
+                        className="admin-input"
+                        value={config.musicUrl === 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3' ? config.musicUrl : ''}
+                        onChange={(e) => e.target.value && setConfig({ ...config, musicUrl: e.target.value })}
+                        style={{ marginBottom: '10px' }}
+                    >
+                        <option value="https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3">
+                            Mbosso - Pawa (Default)
+                        </option>
+                        <option value="">Custom Link (Enter below)</option>
+                    </select>
+
+                    <label className="config-label">Custom Link</label>
+                    <input
+                        className="admin-input"
+                        placeholder="https://example.com/song.mp3"
+                        value={config.musicUrl}
+                        onChange={(e) => setConfig({ ...config, musicUrl: e.target.value })}
+                    />
                 </div>
 
-                <label className="config-label">Start time (seconds) - Skip the intro!</label>
+                <label className="config-label">Start time (seconds)</label>
                 <input
                     className="admin-input"
                     type="number"
@@ -299,13 +342,6 @@ export default function Admin() {
                     value={config.musicStartTime}
                     onChange={(e) => setConfig({ ...config, musicStartTime: Number(e.target.value) })}
                 />
-
-                {config.musicUrl && (
-                    <div style={{ marginTop: '15px' }}>
-                        <p style={{ fontSize: '0.8rem', marginBottom: '5px' }}>🎧 Test Player:</p>
-                        <audio controls src={config.musicUrl} style={{ width: '100%' }} />
-                    </div>
-                )}
             </div>
 
             {/* Success Message Editor */}
