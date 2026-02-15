@@ -335,25 +335,14 @@ export default function Admin() {
             {/* Music Section */}
             <div className="config-section">
                 <h2>🎵 Background Music</h2>
-                <div
-                    className="upload-zone"
-                    style={{ padding: '15px' }}
-                    onClick={() => !uploading && musicInputRef.current.click()}
-                >
-                    {uploading ? '⏳ Uploading Music…' : (config.musicUrl ? '🎵 Custom Music Uploaded (Click to change)' : '☁️ Upload Custom MP3')}
-                </div>
-                <input
-                    ref={musicInputRef}
-                    type="file"
-                    accept="audio/*"
-                    hidden
-                    onChange={(e) => {
-                        if (e.target.files[0]) uploadMusic(e.target.files[0])
-                        e.target.value = ''
-                    }}
-                />
 
-                <label className="config-label" style={{ marginTop: '10px' }}>Start time (seconds) - Skip the intro!</label>
+                <div style={{ marginBottom: '15px' }}>
+                    <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                        Default Track: <strong>Mbosso - Pawa</strong>
+                    </p>
+                </div>
+
+                <label className="config-label">Start time (seconds) - Skip the intro!</label>
                 <input
                     className="admin-input"
                     type="number"
