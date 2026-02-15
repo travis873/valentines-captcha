@@ -18,7 +18,7 @@ export default function Admin() {
     })
     const [configSaved, setConfigSaved] = useState(false)
     const fileInputRef = useRef()
-    const musicInputRef = useRef()
+
     const [uploadRole, setUploadRole] = useState('target')
 
     const headers = { 'x-admin-password': password }
@@ -125,57 +125,6 @@ export default function Admin() {
         }
         setUploading(false)
         fetchImages()
-    }
-
-    const uploadMusic = async (file) => {
-        // Vercel Serverless Function Limit is 4.5MB
-        if (file.size > 4.5 * 1024 * 1024) {
-            alert("⚠️ File too large!\nVercel free tier limits uploads to 4.5MB.\n\nPlease compress your MP3 (e.g. use mp3smaller.com) or clip it.")
-            return
-        }
-
-        setUploading(true)
-        const formData = new FormData()
-        formData.append('file', file)
-
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                headers: {
-                    'x-admin-password': password,
-                    'x-upload-role': 'audio',
-                },
-                body: formData,
-            })
-            if (res.ok) {
-                const data = await res.json()
-                const newUrl = data.url
-
-                // 1. Update local state
-                const newConfig = { ...config, musicUrl: newUrl }
-                setConfig(newConfig)
-
-                // 2. Persist to backend immediately!
-                await fetch('/api/config', {
-                    method: 'POST',
-                    headers: {
-                        'x-admin-password': password,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newConfig),
-                })
-
-                alert("Music uploaded AND saved! 🎵\n\nYou can now test it below.")
-            } else {
-                const err = await res.json()
-                console.error("Upload error details:", err)
-                alert(`Upload failed (Status: ${res.status}): ${err.error || 'Unknown error'}`)
-            }
-        } catch (err) {
-            console.error('Music upload failed:', err)
-            alert(`Network/System Error: ${err.message}`)
-        }
-        setUploading(false)
     }
 
     const deleteImage = async (url) => {
