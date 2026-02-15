@@ -16,6 +16,7 @@ export default async function handler(req, res) {
                 bodyText: 'Just like you found yourself in those photos, I found my happiness in you. Happy Valentine\'s Day! 🌹',
                 letterText: 'You mean everything to me.',
                 signature: '— Forever yours 💌',
+                musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
             });
         } catch (err) {
             console.error('Config read error:', err);

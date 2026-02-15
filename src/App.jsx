@@ -37,7 +37,15 @@ function App() {
 
   // ── Music Player ──────────────────────────────
   const [playing, setPlaying] = useState(false)
-  const [config, setConfig] = useState({})
+  const [config, setConfig] = useState({
+    title: 'You Got It!',
+    heroText: 'You successfully identified the love of my life! ❤️',
+    bodyText: "Just like you found yourself in those photos, I found my happiness in you. Happy Valentine's Day! 🌹",
+    letterText: 'You mean everything to me.',
+    signature: '— Forever yours 💌',
+    musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
+    musicStartTime: 0,
+  })
   const audioRef = useRef(null)
 
   useEffect(() => {

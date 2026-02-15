@@ -15,6 +15,11 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        console.error('Missing BLOB_READ_WRITE_TOKEN');
+        return res.status(500).json({ error: 'Server misconfiguration: Missing Blob Token' });
+    }
+
     // Role comes from a header
     const role = req.headers['x-upload-role'] === 'target' ? 'target' : 'distractor';
 
