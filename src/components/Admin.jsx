@@ -204,27 +204,7 @@ export default function Admin() {
                 </div>
             </div>
 
-            {/* Diagnostics */}
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <button
-                    onClick={async () => {
-                        try {
-                            const res = await fetch('/api/config', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-                                body: JSON.stringify({ _ping: true })
-                            })
-                            if (res.ok) alert("API Connection: OK ✅")
-                            else alert(`API Error: ${res.status} ${res.statusText}`)
-                        } catch (e) {
-                            alert(`Network Error: ${e.message}`)
-                        }
-                    }}
-                    style={{ background: 'rgba(255,255,255,0.2)', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
-                >
-                    📡 Test API Connection
-                </button>
-            </div>
+
 
             {/* Upload Section */}
             <div className="upload-section">

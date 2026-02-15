@@ -52,36 +52,38 @@ function App() {
     // Fetch config for music settings
     fetch('/api/config')
       .then(res => res.json())
-      .then(data => setConfig(data))
+      .then(data => {
+        console.log("Fetched config:", data);
+        setConfig(prev => ({ ...prev, ...data }));
+      })
       .catch(err => console.error("Failed to load config", err))
   }, [])
+
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    const handleInteraction = () => {
+      console.log("User interacted with page.");
+      setHasInteracted(true);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     // Only run if we actually HAVE a music URL and the ref exists
     if (!config.musicUrl || !audioRef.current) return
 
     const audio = audioRef.current
-    console.log("Audio initializing. URL:", config.musicUrl)
-
-    // Force reload if URL changes
-    audio.load()
 
     // Set start time if configured
     const startTime = config.musicStartTime || 0
-
-    const handleLoadedMetadata = () => {
-      console.log("Audio metadata loaded.", { duration: audio.duration, startTime })
-      if (startTime > 0) {
-        if (audio.duration && startTime >= audio.duration) {
-          console.warn("Start time exceeds duration. Resetting to 0.")
-          audio.currentTime = 0
-        } else {
-          audio.currentTime = startTime
-        }
-      }
-      // Try to play immediately after loading metadata
-      attemptPlay()
-    }
 
     const attemptPlay = () => {
       const playPromise = audio.play()
@@ -95,36 +97,29 @@ function App() {
       }
     }
 
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.addEventListener('error', (e) => console.error("Audio Error Event:", e))
-
-    // Play on first click anywhere (fallback for autoplay policy)
-    const handleUserInteraction = () => {
-      console.log("User interaction detected.")
-      if (audio.paused) {
-        attemptPlay()
+    const handleLoadedMetadata = () => {
+      console.log("Audio metadata loaded.", { duration: audio.duration, startTime })
+      if (startTime > 0 && audio.duration && startTime < audio.duration) {
+        audio.currentTime = startTime
       }
-      // Remove listeners once we've tried to play
-      document.removeEventListener('click', handleUserInteraction)
-      document.removeEventListener('touchstart', handleUserInteraction)
-      document.removeEventListener('keydown', handleUserInteraction)
+      attemptPlay()
     }
 
-    document.addEventListener('click', handleUserInteraction)
-    document.addEventListener('touchstart', handleUserInteraction)
-    document.addEventListener('keydown', handleUserInteraction)
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+
+    // If already loaded or interaction happened, try playing
+    if (audio.readyState >= 1) {
+      handleLoadedMetadata();
+    }
+
+    if (hasInteracted) {
+      attemptPlay();
+    }
 
     return () => {
-      document.removeEventListener('click', handleUserInteraction)
-      document.removeEventListener('touchstart', handleUserInteraction)
-      document.removeEventListener('keydown', handleUserInteraction)
-
-      // Cleanup audio listeners
-      if (audio) {
-        audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      }
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
     }
-  }, [config.musicUrl]) // Re-run only if music changes (and exists)
+  }, [config.musicUrl, hasInteracted])
 
   const toggleMusic = (e) => {
     e.stopPropagation()
