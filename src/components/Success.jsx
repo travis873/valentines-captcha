@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
 import './Success.css'
 
-export default function Success() {
+export default function Success({ config: initialConfig }) {
     const fired = useRef(false)
-    const [config, setConfig] = useState({
+    const [config, setConfig] = useState(initialConfig || {
         title: 'You Got It!',
         heroText: 'You successfully identified the love of my life! ❤️',
         bodyText: "Just like you found yourself in those photos, I found my happiness in you. Happy Valentine's Day! 🌹",
@@ -13,6 +13,9 @@ export default function Success() {
     })
 
     useEffect(() => {
+        // If we already have config from props, don't fetch
+        if (initialConfig) return;
+
         // Fetch custom message
         fetch('/api/config')
             .then((r) => r.json())

@@ -10,12 +10,14 @@ function shuffle(arr) {
     return a
 }
 
-export default function Captcha({ onVerify }) {
+export default function Captcha({ onVerify, config }) {
     const [grid, setGrid] = useState([])
     const [selected, setSelected] = useState(new Set())
     const [error, setError] = useState('')
     const [shaking, setShaking] = useState(false)
     const [loading, setLoading] = useState(true)
+
+    const targetName = config?.targetName || 'the HANDSOME ANGEL'
 
     useEffect(() => {
         fetch('/api/images')
@@ -89,7 +91,7 @@ export default function Captcha({ onVerify }) {
             <div className="captcha-lock">🔒</div>
             <h1>Security Check</h1>
             <p className="captcha-subtitle">
-                Select all images of <strong>the HANDSOME ANGEL</strong> to continue
+                Select all images of <strong>{targetName}</strong> to continue
             </p>
 
             <div className="captcha-grid">

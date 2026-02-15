@@ -45,6 +45,8 @@ function App() {
     signature: '— Forever yours 💌',
     musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
     musicStartTime: 0,
+    targetName: 'the HANDSOME ANGEL',
+    senderName: 'Eric',
   })
   const audioRef = useRef(null)
 
@@ -141,7 +143,7 @@ function App() {
     }
   }
 
-  const musicUrl = config.musicUrl
+
 
   return (
     <>
@@ -156,7 +158,7 @@ function App() {
           />
 
           <button
-            className="music-toggle"
+            className={`music-toggle ${playing ? 'playing' : ''}`}
             onClick={toggleMusic}
             title={playing ? "Pause Music" : "Play Music"}
           >
@@ -190,7 +192,7 @@ function App() {
             {step === 'loading' && (
               <div className="glass-card fade-in" style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: '2rem' }}>💕</p>
-                <p>Eric has something special for you...</p>
+                <p>{config.senderName} has something special for you...</p>
               </div>
             )}
             {step === 'coming-soon' && (
@@ -204,9 +206,9 @@ function App() {
               </div>
             )}
             {step === 'captcha' && (
-              <Captcha onVerify={() => setStep('success')} />
+              <Captcha onVerify={() => setStep('success')} config={config} />
             )}
-            {step === 'success' && <Success />}
+            {step === 'success' && <Success config={config} />}
           </>
         )}
       </main>

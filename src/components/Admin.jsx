@@ -15,6 +15,8 @@ export default function Admin() {
         signature: '— Forever yours 💌',
         musicUrl: 'https://c9hl1i3altgoapxo.public.blob.vercel-storage.com/Mbosso%20-%20Pawa%20COMPRESSED%20%281%29.mp3',
         musicStartTime: 0,
+        targetName: 'the HANDSOME ANGEL',
+        senderName: 'Eric',
     })
     const [configSaved, setConfigSaved] = useState(false)
     const fileInputRef = useRef()
@@ -324,6 +326,25 @@ export default function Admin() {
                 />
             </div>
 
+            {/* Customization Section */}
+            <div className="config-section">
+                <h2>👤 Personalization</h2>
+                <label className="config-label">Your Name (Sender)</label>
+                <input
+                    className="admin-input"
+                    value={config.senderName}
+                    onChange={(e) => setConfig({ ...config, senderName: e.target.value })}
+                    placeholder="e.g. Eric"
+                />
+                <label className="config-label">Target Name (Phrase in Captcha)</label>
+                <input
+                    className="admin-input"
+                    value={config.targetName}
+                    onChange={(e) => setConfig({ ...config, targetName: e.target.value })}
+                    placeholder="e.g. the HANDSOME ANGEL"
+                />
+            </div>
+
             {/* Success Message Editor */}
             <div className="config-section">
                 <h2>✏️ Success Message</h2>
@@ -363,9 +384,12 @@ export default function Admin() {
             </div>
 
             {/* Preview link */}
-            <a href="/" target="_blank" rel="noopener noreferrer" className="preview-link">
-                👀 Preview Public Captcha →
-            </a>
+            <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(255,255,255,0.1)', borderRadius: '15px' }}>
+                <a href="/" target="_blank" rel="noopener noreferrer" className="preview-link" style={{ fontSize: '1.1rem', fontWeight: 'bold', textDecoration: 'none', color: 'var(--primary)' }}>
+                    👀 Open Public Captcha →
+                </a>
+                <p style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '10px' }}>Testing tip: Open in a new tab to see your changes.</p>
+            </div>
         </div>
     )
 }
